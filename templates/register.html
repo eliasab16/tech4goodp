@@ -2,10 +2,11 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% block title %}Login Page{% endblock %}
 {% block content %}
-<form action="/login" method="POST" class="container">
-    <h2>Please sign in</h2>
+<form action="/register" method="POST" class="container">
+    <h2>Register with your information</h2>
     {{ form.hidden_tag() }}
     {{ wtf.form_field(form.username) }}
+    {{ wtf.form_field(form.email) }}
     {{ wtf.form_field(form.password) }}
     <!-- <p>Name:</p>
     <p><input type="text" name="nm" /></p>

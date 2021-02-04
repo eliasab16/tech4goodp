@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, render_template, request, session
+from flask import Flask, redirect, url_for, flash, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_login import UserMixin
@@ -108,7 +108,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        return "<h1>New user has been created </h1>"
+        return redirect(url_for("login"))
 
     return render_template("register.html", form=form)
 

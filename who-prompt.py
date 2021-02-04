@@ -7,6 +7,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField
 from wtforms.validators import InputRequired, Email, Length
+from flask_login import (
+    LoginManager,
+    UserMixin,
+    login_user,
+    login_required,
+    logout_user,
+    current_user,
+)
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -15,6 +23,9 @@ app.secret_key = "tech4good"
 # setup database
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.sqlite3"
 db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
 
 class LoginForm(FlaskForm):
@@ -40,11 +51,16 @@ class RegisterForm(FlaskForm):
 app.permanent_session_lifetime = timedelta(minutes=5)
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True)
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100), unique=False)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 # path to function home
@@ -63,30 +79,19 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if check_password_hash(user.password, form.password.data):
-                return redirect(url_for("home"))
+                login_user(user)
+                return redirect(url_for("profile"))
 
     return render_template("login.html", form=form)
 
 
-@app.route("/user", methods=["POST", "GET"])
-def user():
-    email = None
-    # check if there is a login
-    if "user" in session:
-        user = session["user"]
-
-        # if user submitted email address
-        if request.method == "POST":
-            email = request.form["email"]
-            session["email"] = email
-        else:
-            # if email already exists, look it up from the session
-            if "email" in session:
-                email = session["email"]
-
-        return render_template("user.html", email=email)
-    else:
-        return redirect(url_for("login"))
+# cannot access profile unless authorized
+@app.route("/profile", methods=["POST", "GET"])
+@login_required
+def profile():
+    return render_template(
+        "profile.html", name=current_user.username, email=current_user.email
+    )
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -109,9 +114,9 @@ def register():
 
 
 @app.route("/logout")
+@login_required
 def logout():
-    session.pop("user", None)
-    session.pop("email", None)
+    logout_user()
     return redirect(url_for("login"))
 
 

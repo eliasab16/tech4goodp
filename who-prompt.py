@@ -1,4 +1,13 @@
-from flask import Flask, redirect, url_for, flash, render_template, request, session
+from flask import (
+    Flask,
+    redirect,
+    url_for,
+    flash,
+    render_template,
+    request,
+    session,
+    flash,
+)
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_login import UserMixin
@@ -81,7 +90,8 @@ def login():
             if check_password_hash(user.password, form.password.data):
                 login_user(user)
                 return redirect(url_for("profile"))
-
+        else:
+            flash("Invalid user credentials!")
     return render_template("login.html", form=form)
 
 
@@ -99,6 +109,12 @@ def register():
     form = RegisterForm()
 
     if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user:
+            flash("Username already exists!")
+
+            return redirect(url_for("register"))
+
         hashed_password = generate_password_hash(form.password.data, method="sha256")
         new_user = User(
             username=form.username.data,
@@ -108,6 +124,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        flash("New user registered.")
         return redirect(url_for("login"))
 
     return render_template("register.html", form=form)

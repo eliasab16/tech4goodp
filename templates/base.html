@@ -38,6 +38,18 @@
             </div>
         </nav>
     </nav>
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-warning alert-dismissible" runat="server" id="modalEditError" visible="false">
+            <strong>{{ message }}</strong>
+            <div id="Div2" runat="server"></div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
     <div class="container-fluid">
         {% block content %}{% endblock %}
     </div>
